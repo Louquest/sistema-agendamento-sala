@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Painel Administrativo - Studio Andressa Mariano</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="api/api.js"></script>
+    <style>
+        .admin-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 50px;
+        }
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .admin-title {
+            color: #3e2c2c;
+        }
+        .admin-stats {
+            background: linear-gradient(135deg, #b76e79, #e0a4a8);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 16px;
+            text-align: center;
+        }
+        .admin-stats h3 {
+            margin: 0;
+            font-size: 28px;
+        }
+        .admin-stats p {
+            margin: 5px 0 0;
+            opacity: 0.9;
+        }
+        .filtros {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+        .filtro-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .filtro-group label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #3e2c2c;
+        }
+        .filtro-group input, .filtro-group select {
+            padding: 8px 12px;
+            border: 1px solid #b76e79;
+            border-radius: 8px;
+            margin-top: 5px;
+        }
+        .btn-filtrar {
+            background: linear-gradient(135deg, #b76e79, #e0a4a8);
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            height: 38px;
+        }
+        .btn-cancelar-admin {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .btn-cancelar-admin:hover {
+            background: #d32f2f;
+        }
+        .tabela-agendamentos {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .tabela-agendamentos th,
+        .tabela-agendamentos td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        .tabela-agendamentos th {
+            background: #3e2c2c;
+            color: white;
+            font-weight: 600;
+        }
+        .tabela-agendamentos tr:hover {
+            background: #fff0f5;
+        }
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            display: inline-block;
+        }
+        .status-agendado { background: #4CAF50; color: white; }
+        .status-cancelado { background: #f44336; color: white; }
+        .status-concluido { background: #2196F3; color: white; }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+        }
+        .btn-voltar {
+            background: #3e2c2c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-voltar:hover {
+            background: #5a4141;
+        }
+        .sem-dados {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+            font-style: italic;
+        }
+        @media (max-width: 768px) {
+            .tabela-agendamentos {
+                display: block;
+                overflow-x: auto;
+            }
+            .admin-container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+<header class="main-header">
+    <div class="header-content">
+        <div class="logo-container">
+            <img src="img/logo.png" alt="Andressa Mariano" class="logo-img" />
+        </div>
+        <nav class="header-nav">
+            <div class="user-actions" id="userActions"></div>
+        </nav>
+    </div>
+</header>
+
+<main class="admin-container">
+    <div class="admin-header">
+        <h1 class="admin-title">👑 Painel Administrativo</h1>
+        <a href="index.html" class="btn-voltar">← Voltar para o site</a>
+    </div>
+
+    <div class="admin-stats" id="statsPanel">
+        <h3 id="totalAgendamentos">-</h3>
+        <p>Total de Agendamentos</p>
+    </div>
+
+    <div class="filtros">
+        <div class="filtro-group">
+            <label>Data inicial</label>
+            <input type="date" id="filtroDataInicio" />
+        </div>
+        <div class="filtro-group">
+            <label>Data final</label>
+            <input type="date" id="filtroDataFim" />
+        </div>
+        <div class="filtro-group">
+            <label>Status</label>
+            <select id="filtroStatus">
+                <option value="">Todos</option>
+                <option value="agendado">Agendado</option>
+                <option value="concluido">Concluído</option>
+                <option value="cancelado">Cancelado</option>
+            </select>
+        </div>
+        <button class="btn-filtrar" id="btnFiltrar">🔍 Filtrar</button>
+        <button class="btn-filtrar" id="btnLimpar" style="background: #666;">🗑️ Limpar</button>
+    </div>
+
+    <div id="tabelaContainer">
+        <div class="loading">Carregando agendamentos...</div>
+    </div>
+</main>
+
+<footer class="main-footer">
+    <p>© 2026 Studio Andressa Mariano Hair - Painel Administrativo</p>
+</footer>
+
+<script>
+    let usuarioAtual = null;
+    let todosAgendamentos = [];
+
+    async function verificarAcesso() {
+        const usuarioStr = localStorage.getItem("usuario");
+        if (!usuarioStr) {
+            alert("Você precisa estar logado para acessar esta página.");
+            window.location.href = "login.html";
+            return false;
+        }
+        
+        usuarioAtual = JSON.parse(usuarioStr);
+        
+        if (usuarioAtual.tipo !== 'funcionario' && usuarioAtual.tipo !== 'admin') {
+            alert("Acesso negado. Esta página é apenas para funcionários e administradores.");
+            window.location.href = "index.html";
+            return false;
+        }
+        
+        const userActions = document.getElementById("userActions");
+        userActions.innerHTML = `
+            <span style="color: white; margin-right: 15px;">👤 ${usuarioAtual.nome} (${usuarioAtual.tipo})</span>
+            <button class="profile-btn" id="logoutBtnAdmin">Sair</button>
+        `;
+        
+        const logoutBtn = document.getElementById("logoutBtnAdmin");
+        if (logoutBtn) {
+            logoutBtn.addEventListener("click", () => {
+                localStorage.removeItem("usuario");
+                window.location.href = "login.html";
+            });
+        }
+        
+        return true;
+    }
+
+    async function carregarTodosAgendamentos() {
+        if (!usuarioAtual) return;
+        
+        try {
+            const response = await fetch("http://localhost:8000/admin/agendamentos/todos", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email: usuarioAtual.email, senha: usuarioAtual.senha })
+            });
+            
+            if (!response.ok) {
+                throw new Error("Erro ao carregar agendamentos");
+            }
+            
+            const data = await response.json();
+            todosAgendamentos = data.agendamentos || [];
+            
+            document.getElementById("totalAgendamentos").innerText = todosAgendamentos.length;
+            
+            return todosAgendamentos;
+        } catch (err) {
+            console.error("Erro:", err);
+            document.getElementById("tabelaContainer").innerHTML = `
+                <div class="sem-dados">
+                    ❌ Erro ao carregar agendamentos. Verifique se o back-end está rodando.
+                </div>
+            `;
+            return [];
+        }
+    }
+
+    function aplicarFiltros() {
+        const dataInicio = document.getElementById("filtroDataInicio").value;
+        const dataFim = document.getElementById("filtroDataFim").value;
+        const status = document.getElementById("filtroStatus").value;
+        
+        let filtrados = [...todosAgendamentos];
+        
+        if (dataInicio) {
+            filtrados = filtrados.filter(a => a.data_agendamento >= dataInicio.split('-').reverse().join('/'));
+        }
+        if (dataFim) {
+            filtrados = filtrados.filter(a => a.data_agendamento <= dataFim.split('-').reverse().join('/'));
+        }
+        if (status) {
+            filtrados = filtrados.filter(a => a.status === status);
+        }
+        
+        renderizarTabela(filtrados);
+    }
+
+    async function cancelarAgendamentoAdmin(agendamentoId) {
+        const response = await fetch(`http://localhost:8000/agendamentos/${agendamentoId}/cancelar?email=${encodeURIComponent(usuarioAtual.email)}&senha=${encodeURIComponent(usuarioAtual.senha)}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" }
+        });
+        const data = await response.json();
+        if (!response.ok) {
+            throw { status: response.status, detail: data.detail };
+        }
+        return data;
+    }
+
+    function renderizarTabela(agendamentos) {
+        const container = document.getElementById("tabelaContainer");
+        
+        if (!agendamentos || agendamentos.length === 0) {
+            container.innerHTML = `<div class="sem-dados">📭 Nenhum agendamento encontrado.</div>`;
+            return;
+        }
+        
+        let statusClass = "";
+        let statusText = "";
+        
+        const html = `
+            <table class="tabela-agendamentos">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Cliente</th>
+                        <th>Email</th>
+                        <th>Telefone</th>
+                        <th>Data</th>
+                        <th>Hora</th>
+                        <th>Serviços</th>
+                        <th>Valor</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${agendamentos.map(a => {
+                        if (a.status === 'agendado') { statusClass = "status-agendado"; statusText = "Agendado"; }
+                        else if (a.status === 'cancelado') { statusClass = "status-cancelado"; statusText = "Cancelado"; }
+                        else if (a.status === 'concluido') { statusClass = "status-concluido"; statusText = "Concluído"; }
+                        else { statusClass = "status-agendado"; statusText = a.status || "Agendado"; }
+                        
+                        let botoes = "";
+                        if (a.status === 'agendado') {
+                            botoes = `<button class="btn-cancelar-admin" data-id="${a.agendamento_id || a.id}">Cancelar</button>`;
+                        } else {
+                            botoes = `<span style="color: #888;">-</span>`;
+                        }
+                        
+                        return `
+                            <tr data-id="${a.agendamento_id || a.id}">
+                                <td>${a.agendamento_id || a.id}</td>
+                                <td><strong>${a.cliente_nome}</strong></td>
+                                <td>${a.cliente_email}</td>
+                                <td>${a.cliente_telefone || '-'}</td>
+                                <td>${a.data_agendamento}</td>
+                                <td>${a.hora_agendamento}</td>
+                                <td>${a.servicos || '-'}</td>
+                                <td>R$ ${(a.valor_total || 0).toFixed(2)}</td>
+                                <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                                <td>${botoes}</td>
+                            </tr>
+                        `;
+                    }).join('')}
+                </tbody>
+            </table>
+        `;
+        
+        container.innerHTML = html;
+        
+        document.querySelectorAll(".btn-cancelar-admin").forEach(btn => {
+            btn.addEventListener("click", async (e) => {
+                e.stopPropagation();
+                const agendamentoId = parseInt(btn.dataset.id);
+                
+                const confirmar = confirm("Tem certeza que deseja cancelar este agendamento?");
+                if (!confirmar) return;
+                
+                try {
+                    await cancelarAgendamentoAdmin(agendamentoId);
+                    alert("✅ Agendamento cancelado com sucesso!");
+                    await carregarTodosAgendamentos();
+                    aplicarFiltros();
+                } catch (err) {
+                    alert("Erro ao cancelar: " + (err.detail || err.message));
+                }
+            });
+        });
+    }
+
+    async function init() {
+        const temAcesso = await verificarAcesso();
+        if (!temAcesso) return;
+        
+        await carregarTodosAgendamentos();
+        renderizarTabela(todosAgendamentos);
+        
+        document.getElementById("btnFiltrar").addEventListener("click", aplicarFiltros);
+        document.getElementById("btnLimpar").addEventListener("click", () => {
+            document.getElementById("filtroDataInicio").value = "";
+            document.getElementById("filtroDataFim").value = "";
+            document.getElementById("filtroStatus").value = "";
+            renderizarTabela(todosAgendamentos);
+        });
+    }
+    
+    init();
+</script>
+</body>
+</html>

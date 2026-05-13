@@ -1,0 +1,474 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gerenciar Sistema - Studio Andressa Mariano</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="api/api.js"></script>
+    <style>
+        .admin-container { max-width: 1400px; margin: 0 auto; padding: 40px 50px; }
+        .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px; }
+        .admin-title { color: #3e2c2c; }
+        .btn-voltar { background: #3e2c2c; color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; text-decoration: none; display: inline-block; }
+        .btn-voltar:hover { background: #5a4141; }
+        .tabela-servicos, .tabela-agendamentos, .tabela-clientes { width: 100%; border-collapse: collapse; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .tabela-servicos th, .tabela-agendamentos th, .tabela-clientes th,
+        .tabela-servicos td, .tabela-agendamentos td, .tabela-clientes td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #eee; }
+        .tabela-servicos th, .tabela-agendamentos th, .tabela-clientes th { background: #3e2c2c; color: white; font-weight: 600; }
+        .tabela-servicos tr:hover, .tabela-agendamentos tr:hover, .tabela-clientes tr:hover { background: #fff0f5; }
+        .btn-editar, .btn-acao { background: #2196F3; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; margin: 2px; }
+        .btn-editar:hover, .btn-acao:hover { background: #0b7dda; opacity: 0.9; }
+        .btn-salvar { background: #4CAF50; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+        .btn-salvar:hover { background: #45a049; }
+        .btn-cancelar-edicao, .btn-acao-cancelar { background: #f44336; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+        .btn-cancelar-edicao:hover, .btn-acao-cancelar:hover { background: #d32f2f; }
+        .btn-acao-concluir { background: #4CAF50; }
+        .btn-acao-concluir:hover { background: #45a049; }
+        .btn-acao-deletar { background: #ff9800; color: #333; }
+        .btn-acao-deletar:hover { background: #e68900; }
+        .btn-acao-reset-senha { background: #9c27b0; }
+        .btn-acao-reset-senha:hover { background: #7b1fa2; }
+        .input-preco { width: 100px; padding: 5px; border: 1px solid #b76e79; border-radius: 6px; }
+        .loading { text-align: center; padding: 40px; color: #888; }
+        .menu-admin { display: flex; gap: 15px; margin-bottom: 30px; flex-wrap: wrap; }
+        .menu-btn { background: linear-gradient(135deg, #b76e79, #e0a4a8); color: white; border: none; padding: 12px 25px; border-radius: 10px; cursor: pointer; font-size: 14px; }
+        .menu-btn.active { background: #3e2c2c; }
+        .menu-btn:hover { transform: scale(1.02); }
+        .filtros { display: flex; gap: 15px; margin-bottom: 30px; flex-wrap: wrap; align-items: flex-end; background: #f9f9f9; padding: 20px; border-radius: 16px; }
+        .filtro-group { display: flex; flex-direction: column; }
+        .filtro-group label { font-size: 12px; font-weight: 600; color: #3e2c2c; }
+        .filtro-group input, .filtro-group select { padding: 8px 12px; border: 1px solid #b76e79; border-radius: 8px; margin-top: 5px; min-width: 150px; }
+        .btn-filtrar { background: linear-gradient(135deg, #b76e79, #e0a4a8); color: white; border: none; padding: 8px 20px; border-radius: 8px; cursor: pointer; height: 38px; }
+        .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; display: inline-block; cursor: pointer; transition: transform 0.2s; }
+        .status-badge:hover { transform: scale(1.05); }
+        .status-agendado { background: #4CAF50; color: white; }
+        .status-cancelado { background: #f44336; color: white; }
+        .status-concluido { background: #2196F3; color: white; }
+        .status-pendente { background: #ff9800; color: white; }
+        .status-pago { background: #4CAF50; color: white; }
+        .success-msg { background: #d4edda; color: #155724; padding: 10px; border-radius: 8px; margin-bottom: 20px; display: none; }
+        .error-msg { background: #f8d7da; color: #721c24; padding: 10px; border-radius: 8px; margin-bottom: 20px; display: none; }
+        .section-label { font-size: 18px; font-weight: 700; color: #3e2c2c; margin-bottom: 20px; letter-spacing: 1px; }
+        .sem-dados { text-align: center; padding: 40px; color: #888; font-style: italic; }
+        .resumo { background: #f9f9f9; padding: 15px; border-radius: 12px; margin-bottom: 20px; display: flex; gap: 20px; flex-wrap: wrap; }
+        .resumo-item { background: white; padding: 10px 20px; border-radius: 10px; border-left: 4px solid #b76e79; }
+        .resumo-item h4 { margin: 0; font-size: 12px; color: #888; }
+        .resumo-item .valor { font-size: 24px; font-weight: bold; color: #3e2c2c; }
+        .valor-cancelado { text-decoration: line-through; color: #999; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 30px; border-radius: 20px; max-width: 500px; width: 90%; }
+        .modal-content h3 { margin-bottom: 20px; color: #3e2c2c; }
+        .modal-content input, .modal-content select { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #b76e79; border-radius: 8px; }
+        .modal-buttons { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+        .btn-modal { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; }
+        .btn-modal-salvar { background: #4CAF50; color: white; }
+        .btn-modal-cancelar { background: #ccc; color: #333; }
+    </style>
+</head>
+<body>
+<header class="main-header">
+    <div class="header-content">
+        <div class="logo-container"><img src="img/logo.png" alt="Andressa Mariano" class="logo-img" /></div>
+        <nav class="header-nav"><div class="user-actions" id="userActions"></div></nav>
+    </div>
+</header>
+
+<main class="admin-container">
+    <div class="admin-header">
+        <h1 class="admin-title">⚙️ Gerenciar Sistema</h1>
+        <div><a href="index.html" class="btn-voltar">← Voltar para o site</a></div>
+    </div>
+    <div id="successMsg" class="success-msg"></div>
+    <div id="errorMsg" class="error-msg"></div>
+    <div class="menu-admin">
+        <button class="menu-btn active" id="btnServicos">💰 Gerenciar Serviços</button>
+        <button class="menu-btn" id="btnAgendamentos">📅 Ver Agendamentos</button>
+        <button class="menu-btn" id="btnClientes">👥 Gerenciar Clientes</button>
+    </div>
+    <div id="servicosSection"><h3 class="section-label">📋 Lista de Serviços</h3><div id="tabelaContainer"><div class="loading">Carregando serviços...</div></div></div>
+    <div id="agendamentosSection" style="display: none;">
+        <h3 class="section-label">📋 Todos os Agendamentos</h3>
+        <div class="filtros">
+            <div class="filtro-group"><label>📅 Data Início</label><input type="date" id="filtroDataInicio" /></div>
+            <div class="filtro-group"><label>📅 Data Fim</label><input type="date" id="filtroDataFim" /></div>
+            <div class="filtro-group"><label>📌 Status</label><select id="filtroStatus"><option value="">Todos</option><option value="agendado">Agendado</option><option value="cancelado">Cancelado</option><option value="concluido">Concluído</option></select></div>
+            <div class="filtro-group"><label>💰 Pagamento</label><select id="filtroPagamento"><option value="">Todos</option><option value="pendente">Pendente</option><option value="pago">Pago</option></select></div>
+            <button class="btn-filtrar" id="btnFiltrar">🔍 Filtrar</button>
+            <button class="btn-filtrar" id="btnLimpar" style="background: #666;">🗑️ Limpar</button>
+            <button class="btn-filtrar" id="btnRecarregar" style="background: #2196F3;">🔄 Recarregar</button>
+        </div>
+        <div id="resumoAgendamentos" class="resumo"></div>
+        <div id="tabelaAgendamentos"><div class="loading">Carregando agendamentos...</div></div>
+    </div>
+    <div id="clientesSection" style="display: none;"><h3 class="section-label">👥 Lista de Clientes</h3><div id="tabelaClientesContainer"><div class="loading">Carregando clientes...</div></div></div>
+</main>
+<footer class="main-footer"><p>© 2026 Studio Andressa Mariano Hair - Painel de Gerenciamento</p></footer>
+
+<!-- Modal para Editar Cliente (COM CAMPO DE SENHA) -->
+<div id="modalEditarCliente" class="modal">
+    <div class="modal-content">
+        <h3>✏️ Editar Cliente</h3>
+        <input type="text" id="editClienteId" hidden />
+        <div class="input-group">
+            <label>Nome</label>
+            <input type="text" id="editNome" />
+        </div>
+        <div class="input-group">
+            <label>Email</label>
+            <input type="email" id="editEmail" />
+        </div>
+        <div class="input-group">
+            <label>Telefone</label>
+            <input type="text" id="editTelefone" />
+        </div>
+        <div class="input-group">
+            <label>Tipo</label>
+            <select id="editTipo">
+                <option value="cliente">Cliente</option>
+                <option value="funcionario">Funcionário</option>
+                <option value="admin">Administrador</option>
+            </select>
+        </div>
+        <hr style="margin: 15px 0; border-color: #b76e79;" />
+        <div class="input-group">
+            <label>🔑 Nova Senha (opcional)</label>
+            <input type="password" id="editSenha" placeholder="Deixe em branco para manter a atual" />
+        </div>
+        <div class="input-group">
+            <label>🔑 Confirmar Nova Senha</label>
+            <input type="password" id="editConfirmarSenha" placeholder="Digite a mesma senha" />
+        </div>
+        <div class="modal-buttons">
+            <button class="btn-modal btn-modal-salvar" id="salvarEdicaoCliente">💾 Salvar</button>
+            <button class="btn-modal btn-modal-cancelar" id="cancelarEdicaoCliente">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Reset de Senha -->
+<div id="modalResetSenha" class="modal">
+    <div class="modal-content">
+        <h3>🔑 Resetar Senha</h3>
+        <p>Cliente: <strong id="resetClienteNome"></strong></p>
+        <div class="input-group">
+            <label>Nova Senha</label>
+            <input type="password" id="resetNovaSenha" placeholder="Digite a nova senha" />
+        </div>
+        <div class="input-group">
+            <label>Confirmar Senha</label>
+            <input type="password" id="resetConfirmarSenha" placeholder="Digite a mesma senha" />
+        </div>
+        <div class="modal-buttons">
+            <button class="btn-modal btn-modal-salvar" id="confirmarResetSenha">💾 Salvar</button>
+            <button class="btn-modal btn-modal-cancelar" id="cancelarResetSenha">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let usuarioAtual = null, todosAgendamentos = [], todosUsuarios = [], editandoServicoId = null;
+    let clienteResetId = null, clienteResetNome = null;
+
+    async function verificarAcesso() {
+        const usuarioStr = localStorage.getItem("usuario");
+        if (!usuarioStr) { alert("Você precisa estar logado."); window.location.href = "login.html"; return false; }
+        usuarioAtual = JSON.parse(usuarioStr);
+        if (usuarioAtual.tipo !== 'funcionario' && usuarioAtual.tipo !== 'admin') { alert("Acesso negado."); window.location.href = "index.html"; return false; }
+        document.getElementById("userActions").innerHTML = `<span style="color:white">👤 ${usuarioAtual.nome} (${usuarioAtual.tipo})</span> <button class="profile-btn" id="logoutBtnAdmin">Sair</button>`;
+        document.getElementById("logoutBtnAdmin")?.addEventListener("click", () => { localStorage.removeItem("usuario"); window.location.href = "login.html"; });
+        return true;
+    }
+
+    function mostrarMensagem(texto, tipo = 'success') {
+        const div = document.getElementById(tipo === 'success' ? "successMsg" : "errorMsg");
+        div.innerText = texto; div.style.display = "block";
+        setTimeout(() => div.style.display = "none", 5000);
+    }
+
+    // ==================== SERVIÇOS ====================
+    async function carregarServicos() {
+        try {
+            const servicos = await listarServicos();
+            if (!servicos?.length) { document.getElementById("tabelaContainer").innerHTML = "<p class='sem-dados'>Nenhum serviço.</p>"; return; }
+            document.getElementById("tabelaContainer").innerHTML = `<table class="tabela-servicos"><thead><tr><th>ID</th><th>Nome</th><th>Descrição</th><th>Preço</th><th>Ações</th></tr></thead><tbody>${servicos.map(s => `<tr><td>${s.id}</td><td><strong>${s.nome}</strong></td><td>${s.descricao || '-'}</td><td class="preco-cell">${editandoServicoId === s.id ? `<input type="number" step="0.01" id="preco-input-${s.id}" value="${s.preco}" class="input-preco">` : `R$ ${parseFloat(s.preco).toFixed(2)}`}</td><td>${editandoServicoId === s.id ? `<button class="btn-salvar" data-id="${s.id}">💾 Salvar</button> <button class="btn-cancelar-edicao" data-id="${s.id}">❌ Cancelar</button>` : `<button class="btn-editar" data-id="${s.id}">✏️ Editar Preço</button>`}</td></tr>`).join('')}</tbody></table>`;
+            document.querySelectorAll(".btn-editar").forEach(btn => btn.addEventListener("click", () => { editandoServicoId = parseInt(btn.dataset.id); carregarServicos(); }));
+            document.querySelectorAll(".btn-salvar").forEach(btn => btn.addEventListener("click", async () => {
+                const id = parseInt(btn.dataset.id);
+                let novoPreco = parseFloat(document.getElementById(`preco-input-${id}`).value);
+                if (isNaN(novoPreco) || novoPreco < 0) { mostrarMensagem("Preço inválido!", "error"); return; }
+                novoPreco = Math.round(novoPreco * 100) / 100;
+                try {
+                    const res = await fetch(`http://localhost:8000/servicos/${id}/preco`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ preco: novoPreco }) });
+                    if (!res.ok) throw new Error((await res.json()).detail);
+                    mostrarMensagem(`✅ Preço atualizado para R$ ${novoPreco.toFixed(2)}`);
+                    editandoServicoId = null; carregarServicos();
+                } catch (err) { mostrarMensagem("Erro: " + err.message, "error"); }
+            }));
+            document.querySelectorAll(".btn-cancelar-edicao").forEach(btn => btn.addEventListener("click", () => { editandoServicoId = null; carregarServicos(); }));
+        } catch (err) { console.error(err); document.getElementById("tabelaContainer").innerHTML = "<p class='sem-dados'>Erro ao carregar serviços.</p>"; }
+    }
+
+    // ==================== AGENDAMENTOS ====================
+    async function carregarTodosAgendamentos() {
+        try {
+            const res = await fetch("http://localhost:8000/admin/agendamentos/todos", { 
+                method: "POST", 
+                headers: { "Content-Type": "application/json" }, 
+                body: JSON.stringify({ email: usuarioAtual.email, senha: usuarioAtual.senha }) 
+            });
+            if (!res.ok) throw new Error("Erro ao carregar");
+            const data = await res.json();
+            const pagamentos = JSON.parse(localStorage.getItem("status_pagamento") || "{}");
+            todosAgendamentos = (data.agendamentos || []).map(a => ({ ...a, status_pagamento: pagamentos[a.agendamento_id || a.id] || (a.status === 'cancelado' ? 'cancelado' : (a.status === 'agendado' ? 'pendente' : 'pago')) }));
+            return todosAgendamentos;
+        } catch (err) { document.getElementById("tabelaAgendamentos").innerHTML = `<div class="sem-dados">❌ Erro: ${err.message}</div>`; return []; }
+    }
+
+    function aplicarFiltros() {
+        let filtrados = [...todosAgendamentos];
+        const dataInicio = document.getElementById("filtroDataInicio").value;
+        const dataFim = document.getElementById("filtroDataFim").value;
+        const status = document.getElementById("filtroStatus").value;
+        const pagamento = document.getElementById("filtroPagamento").value;
+        if (dataInicio) filtrados = filtrados.filter(a => a.data_agendamento.split('/').reverse().join('-') >= dataInicio);
+        if (dataFim) filtrados = filtrados.filter(a => a.data_agendamento.split('/').reverse().join('-') <= dataFim);
+        if (status) filtrados = filtrados.filter(a => a.status === status);
+        if (pagamento) filtrados = filtrados.filter(a => a.status_pagamento === pagamento);
+        renderizarAgendamentos(filtrados);
+    }
+
+    function atualizarResumo(agendamentos) {
+        const total = agendamentos.length, agendados = agendamentos.filter(a => a.status === 'agendado').length, cancelados = agendamentos.filter(a => a.status === 'cancelado').length, concluidos = agendamentos.filter(a => a.status === 'concluido').length;
+        const totalValor = agendamentos.filter(a => a.status !== 'cancelado').reduce((s, a) => s + (a.valor_total || 0), 0);
+        const valorPago = agendamentos.filter(a => a.status_pagamento === 'pago' && a.status !== 'cancelado').reduce((s, a) => s + (a.valor_total || 0), 0);
+        document.getElementById("resumoAgendamentos").innerHTML = `<div class="resumo-item"><h4>📊 Total</h4><div class="valor">${total}</div></div><div class="resumo-item"><h4>✅ Agendados</h4><div class="valor">${agendados}</div></div><div class="resumo-item"><h4>❌ Cancelados</h4><div class="valor">${cancelados}</div></div><div class="resumo-item"><h4>✔️ Concluídos</h4><div class="valor">${concluidos}</div></div><div class="resumo-item"><h4>💰 Valor Total</h4><div class="valor">R$ ${totalValor.toFixed(2)}</div></div><div class="resumo-item"><h4>💚 Recebido</h4><div class="valor">R$ ${valorPago.toFixed(2)}</div></div><div class="resumo-item"><h4>🟡 Pendente</h4><div class="valor">R$ ${(totalValor - valorPago).toFixed(2)}</div></div>`;
+    }
+
+    function renderizarAgendamentos(agendamentos) {
+        if (!agendamentos.length) { document.getElementById("tabelaAgendamentos").innerHTML = `<div class="sem-dados">📭 Nenhum agendamento.</div>`; atualizarResumo([]); return; }
+        atualizarResumo(agendamentos);
+        document.getElementById("tabelaAgendamentos").innerHTML = `<table class="tabela-agendamentos"><thead><tr><th>ID</th><th>Cliente</th><th>Email</th><th>Telefone</th><th>Data</th><th>Hora</th><th>Serviços</th><th>Valor</th><th>Status</th><th>Pagamento</th><th>Ações</th></tr></thead><tbody>${agendamentos.map(a => {
+            let statusClass = a.status === 'agendado' ? 'status-agendado' : (a.status === 'cancelado' ? 'status-cancelado' : 'status-concluido');
+            let statusText = a.status === 'agendado' ? 'Agendado' : (a.status === 'cancelado' ? 'Cancelado' : 'Concluído');
+            let pagClass = a.status_pagamento === 'pago' ? 'status-pago' : 'status-pendente';
+            let pagText = a.status_pagamento === 'pago' ? 'Pago' : 'Pendente';
+            let valorDisplay = a.status === 'cancelado' ? `<span class="valor-cancelado">R$ ${(a.valor_total || 0).toFixed(2)}</span>` : `<strong>R$ ${(a.valor_total || 0).toFixed(2)}</strong>`;
+            let botoes = '';
+            if (a.status === 'agendado') {
+                botoes = `<button class="btn-acao btn-acao-cancelar" onclick="window.alterarAgendamento(${a.agendamento_id || a.id}, 'cancelar')">❌ Cancelar</button>
+                          <button class="btn-acao btn-acao-concluir" onclick="window.alterarAgendamento(${a.agendamento_id || a.id}, 'concluir')">✓ Concluir</button>
+                          <button class="btn-acao btn-acao-deletar" onclick="window.alterarAgendamento(${a.agendamento_id || a.id}, 'deletar')">🗑️ Deletar</button>`;
+            } else if (a.status === 'concluido') {
+                botoes = `<button class="btn-acao btn-acao-deletar" onclick="window.alterarAgendamento(${a.agendamento_id || a.id}, 'deletar')">🗑️ Deletar</button>
+                          <span style="color:#888; margin-left:5px;">✓ Concluído</span>`;
+            } else {
+                botoes = `<button class="btn-acao btn-acao-deletar" onclick="window.alterarAgendamento(${a.agendamento_id || a.id}, 'deletar')">🗑️ Deletar</button>
+                          <span style="color:#888; margin-left:5px;">❌ Cancelado</span>`;
+            }
+            return `<tr><td>${a.agendamento_id || a.id}</td><td><strong>${a.cliente_nome || a.cliente_email}</strong></td><td>${a.cliente_email}</td><td>${a.cliente_telefone || '-'}</td><td>${a.data_agendamento}</td><td>${a.hora_agendamento}</td><td>${(a.servicos || '-').substring(0, 50)}</td><td>${valorDisplay}</td><td><span class="status-badge ${statusClass}">${statusText}</span></td><td><span class="status-badge ${pagClass}" onclick="window.alterarPagamento(${a.agendamento_id || a.id}, '${a.status_pagamento}')" title="Clique para alterar">${pagText} 🔄</span></td><td>${botoes}</td></tr>`;
+        }).join('')}</tbody></table>`;
+    }
+
+    window.alterarPagamento = async (id, statusAtual) => {
+        const novoStatus = statusAtual === 'pago' ? 'pendente' : 'pago';
+        const pagamentos = JSON.parse(localStorage.getItem("status_pagamento") || "{}");
+        pagamentos[id] = novoStatus;
+        localStorage.setItem("status_pagamento", JSON.stringify(pagamentos));
+        await carregarTodosAgendamentos();
+        aplicarFiltros();
+        mostrarMensagem(`Status alterado para ${novoStatus === 'pago' ? 'PAGO' : 'PENDENTE'}`);
+    };
+
+    window.alterarAgendamento = async (id, acao) => {
+        let confirmMsg = "", url = "", method = "";
+        if (acao === 'cancelar') { confirmMsg = "Cancelar este agendamento?"; url = `http://localhost:8000/agendamentos/${id}/cancelar?email=${usuarioAtual.email}&senha=${usuarioAtual.senha}`; method = "PUT"; }
+        else if (acao === 'concluir') { confirmMsg = "Marcar como CONCLUÍDO?"; url = `http://localhost:8000/agendamentos/${id}/concluir?email=${usuarioAtual.email}&senha=${usuarioAtual.senha}`; method = "PUT"; }
+        else if (acao === 'deletar') { confirmMsg = "DELETAR permanentemente?"; url = `http://localhost:8000/agendamentos/${id}?email=${usuarioAtual.email}&senha=${usuarioAtual.senha}`; method = "DELETE"; }
+        if (!confirm(confirmMsg)) return;
+        try {
+            const res = await fetch(url, { method });
+            if (!res.ok) throw new Error((await res.json()).detail);
+            mostrarMensagem(`✅ Agendamento ${acao === 'cancelar' ? 'cancelado' : (acao === 'concluir' ? 'concluído' : 'deletado')} com sucesso!`);
+            await carregarTodosAgendamentos();
+            aplicarFiltros();
+        } catch (err) { mostrarMensagem("Erro: " + err.message, "error"); }
+    };
+
+    async function carregarERenderizarAgendamentos() {
+        document.getElementById("tabelaAgendamentos").innerHTML = '<div class="loading">Carregando...</div>';
+        await carregarTodosAgendamentos();
+        renderizarAgendamentos(todosAgendamentos);
+    }
+
+    // ==================== CLIENTES ====================
+    async function carregarClientes() {
+        try {
+            const res = await fetch(`http://localhost:8000/admin/usuarios?email=${usuarioAtual.email}&senha=${usuarioAtual.senha}`);
+            if (!res.ok) throw new Error("Erro ao carregar clientes");
+            const data = await res.json();
+            todosUsuarios = data.usuarios || [];
+            if (!todosUsuarios.length) { document.getElementById("tabelaClientesContainer").innerHTML = "<p class='sem-dados'>Nenhum cliente cadastrado.</p>"; return; }
+            document.getElementById("tabelaClientesContainer").innerHTML = `<table class="tabela-clientes"><thead><tr><th>ID</th><th>Nome</th><th>Email</th><th>Telefone</th><th>Tipo</th><th>Cadastro</th><th>Ações</th></tr></thead><tbody>${todosUsuarios.map(u => `<tr><td>${u.id}</td><td><strong>${u.nome}</strong></td><td>${u.email}</td><td>${u.telefone || '-'}</td><td><span class="status-badge ${u.tipo === 'admin' ? 'status-agendado' : (u.tipo === 'funcionario' ? 'status-concluido' : 'status-pendente')}">${u.tipo}</span></td><td>${u.criado_em || '-'}</td><td><button class="btn-acao" onclick="window.abrirEditarCliente(${u.id}, '${u.nome}', '${u.email}', '${u.telefone || ''}', '${u.tipo}')">✏️ Editar</button> <button class="btn-acao btn-acao-reset-senha" onclick="window.abrirModalResetSenha(${u.id}, '${u.nome}')">🔑 Reset Senha</button> <button class="btn-acao btn-acao-deletar" onclick="window.deletarCliente(${u.id})">🗑️ Deletar</button></td></tr>`).join('')}</tbody></table>`;
+        } catch (err) { 
+            console.error("Erro ao carregar clientes:", err);
+            document.getElementById("tabelaClientesContainer").innerHTML = `<div class="sem-dados">❌ Erro ao carregar clientes: ${err.message}</div>`; 
+        }
+    }
+
+    window.abrirEditarCliente = (id, nome, email, telefone, tipo) => {
+        document.getElementById("editClienteId").value = id;
+        document.getElementById("editNome").value = nome;
+        document.getElementById("editEmail").value = email;
+        document.getElementById("editTelefone").value = telefone;
+        document.getElementById("editTipo").value = tipo;
+        document.getElementById("editSenha").value = "";
+        document.getElementById("editConfirmarSenha").value = "";
+        document.getElementById("modalEditarCliente").style.display = "flex";
+    };
+
+    document.getElementById("salvarEdicaoCliente")?.addEventListener("click", async () => {
+        const id = document.getElementById("editClienteId").value;
+        const novaSenha = document.getElementById("editSenha").value;
+        const confirmarSenha = document.getElementById("editConfirmarSenha").value;
+        
+        if (novaSenha || confirmarSenha) {
+            if (novaSenha !== confirmarSenha) {
+                alert("❌ As senhas não coincidem!");
+                return;
+            }
+            if (novaSenha.length < 6) {
+                alert("❌ A senha deve ter pelo menos 6 caracteres.");
+                return;
+            }
+        }
+        
+        const dados = { 
+            nome: document.getElementById("editNome").value, 
+            email: document.getElementById("editEmail").value, 
+            telefone: document.getElementById("editTelefone").value, 
+            tipo: document.getElementById("editTipo").value 
+        };
+        
+        try {
+            const params = new URLSearchParams({ admin_email: usuarioAtual.email, admin_senha: usuarioAtual.senha, ...dados });
+            const res = await fetch(`http://localhost:8000/admin/usuarios/${id}?${params}`, { method: "PUT" });
+            if (!res.ok) throw new Error((await res.json()).detail);
+            
+            if (novaSenha) {
+                const resetRes = await fetch(`http://localhost:8000/admin/usuarios/${id}/reset-senha?admin_email=${usuarioAtual.email}&admin_senha=${usuarioAtual.senha}&nova_senha=${encodeURIComponent(novaSenha)}`, { method: "PUT" });
+                if (!resetRes.ok) throw new Error((await resetRes.json()).detail);
+                mostrarMensagem(`✅ Cliente atualizado e senha alterada com sucesso!`);
+            } else {
+                mostrarMensagem(`✅ Cliente atualizado com sucesso!`);
+            }
+            
+            document.getElementById("modalEditarCliente").style.display = "none";
+            await carregarClientes();
+        } catch (err) { 
+            mostrarMensagem("Erro: " + err.message, "error"); 
+        }
+    });
+
+    document.getElementById("cancelarEdicaoCliente")?.addEventListener("click", () => document.getElementById("modalEditarCliente").style.display = "none");
+
+    // Funções para Reset de Senha
+    window.abrirModalResetSenha = (id, nome) => {
+        clienteResetId = id;
+        clienteResetNome = nome;
+        document.getElementById("resetClienteNome").innerText = nome;
+        document.getElementById("resetNovaSenha").value = "";
+        document.getElementById("resetConfirmarSenha").value = "";
+        document.getElementById("modalResetSenha").style.display = "flex";
+    };
+
+    window.confirmarResetSenha = async () => {
+        const novaSenha = document.getElementById("resetNovaSenha").value;
+        const confirmarSenha = document.getElementById("resetConfirmarSenha").value;
+        
+        if (!novaSenha || !confirmarSenha) {
+            alert("❌ Digite a nova senha e a confirmação.");
+            return;
+        }
+        if (novaSenha !== confirmarSenha) {
+            alert("❌ As senhas não coincidem! Digite novamente.");
+            return;
+        }
+        if (novaSenha.length < 6) {
+            alert("❌ A senha deve ter pelo menos 6 caracteres.");
+            return;
+        }
+        
+        try {
+            const res = await fetch(`http://localhost:8000/admin/usuarios/${clienteResetId}/reset-senha?admin_email=${usuarioAtual.email}&admin_senha=${usuarioAtual.senha}&nova_senha=${encodeURIComponent(novaSenha)}`, { method: "PUT" });
+            if (!res.ok) throw new Error((await res.json()).detail);
+            mostrarMensagem(`✅ Senha do cliente ${clienteResetNome} alterada com sucesso!`);
+            document.getElementById("modalResetSenha").style.display = "none";
+        } catch (err) { 
+            alert("Erro ao resetar senha: " + err.message);
+        }
+    };
+
+    window.cancelarResetSenha = () => {
+        document.getElementById("modalResetSenha").style.display = "none";
+    };
+
+    document.getElementById("confirmarResetSenha")?.addEventListener("click", window.confirmarResetSenha);
+    document.getElementById("cancelarResetSenha")?.addEventListener("click", window.cancelarResetSenha);
+
+    window.deletarCliente = async (id) => {
+        if (!confirm("⚠️ DELETAR este cliente permanentemente? Todos os agendamentos serão removidos!")) return;
+        try {
+            const res = await fetch(`http://localhost:8000/admin/usuarios/${id}?admin_email=${usuarioAtual.email}&admin_senha=${usuarioAtual.senha}`, { method: "DELETE" });
+            if (!res.ok) throw new Error((await res.json()).detail);
+            mostrarMensagem("✅ Cliente deletado!");
+            await carregarClientes();
+        } catch (err) { mostrarMensagem("Erro: " + err.message, "error"); }
+    };
+
+    // ==================== EVENTOS ====================
+    document.getElementById("btnServicos").addEventListener("click", () => {
+        document.getElementById("servicosSection").style.display = "block";
+        document.getElementById("agendamentosSection").style.display = "none";
+        document.getElementById("clientesSection").style.display = "none";
+        document.getElementById("btnServicos").classList.add("active");
+        document.getElementById("btnAgendamentos").classList.remove("active");
+        document.getElementById("btnClientes").classList.remove("active");
+        carregarServicos();
+    });
+    document.getElementById("btnAgendamentos").addEventListener("click", async () => {
+        document.getElementById("servicosSection").style.display = "none";
+        document.getElementById("agendamentosSection").style.display = "block";
+        document.getElementById("clientesSection").style.display = "none";
+        document.getElementById("btnAgendamentos").classList.add("active");
+        document.getElementById("btnServicos").classList.remove("active");
+        document.getElementById("btnClientes").classList.remove("active");
+        await carregarERenderizarAgendamentos();
+    });
+    document.getElementById("btnClientes").addEventListener("click", async () => {
+        document.getElementById("servicosSection").style.display = "none";
+        document.getElementById("agendamentosSection").style.display = "none";
+        document.getElementById("clientesSection").style.display = "block";
+        document.getElementById("btnClientes").classList.add("active");
+        document.getElementById("btnServicos").classList.remove("active");
+        document.getElementById("btnAgendamentos").classList.remove("active");
+        await carregarClientes();
+    });
+    document.getElementById("btnFiltrar")?.addEventListener("click", aplicarFiltros);
+    document.getElementById("btnLimpar")?.addEventListener("click", () => {
+        document.getElementById("filtroDataInicio").value = "";
+        document.getElementById("filtroDataFim").value = "";
+        document.getElementById("filtroStatus").value = "";
+        document.getElementById("filtroPagamento").value = "";
+        renderizarAgendamentos(todosAgendamentos);
+    });
+    document.getElementById("btnRecarregar")?.addEventListener("click", async () => await carregarERenderizarAgendamentos());
+
+    async function init() {
+        if (!await verificarAcesso()) return;
+        await carregarServicos();
+    }
+    init();
+</script>
+</body>
+</html>
