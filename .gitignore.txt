@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.pyc
+.env
+venv/
+.venv/
+*.pyc
+
+# IDE
+.idea/
+.vscode/
+
+# Backups
+*_backup.py
+*.backup
+*.old
+
+# Banco de dados
+*.sql
+!database/*.sql
+
+# Sistema
+*.log
+*.bat
+!iniciar_sistema.bat
+
+# OS
+.DS_Store
+Thumbs.db
