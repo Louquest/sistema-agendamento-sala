@@ -1,0 +1,604 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Studio Andressa Mariano Hair</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="api/api.js"></script>
+    <style>
+        /* Estilos específicos para o modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            max-width: 450px;
+            width: 90%;
+            padding: 30px;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .modal-content h2 {
+            color: #3e2c2c;
+            margin-bottom: 10px;
+        }
+        .modal-content .input-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+        .modal-content .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        .modal-content .input-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .btn-fechar {
+            background: #ccc;
+            color: #333;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        .btn-fechar:hover {
+            background: #bbb;
+        }
+        /* Estilos para a seção de agendamentos */
+        .agendamento-card {
+            background: #ffffff;
+            border: 1px solid #b76e79;
+            border-radius: 16px;
+            padding: 15px;
+            margin-bottom: 15px;
+            transition: 0.2s;
+        }
+        .agendamento-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(183, 110, 121, 0.2);
+        }
+        .agendamento-card h4 {
+            color: #b76e79;
+            margin-bottom: 10px;
+        }
+        .status-agendado {
+            background: #4CAF50;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 20px;
+            display: inline-block;
+            font-size: 12px;
+        }
+        .status-cancelado {
+            background: #f44336;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 20px;
+            display: inline-block;
+            font-size: 12px;
+        }
+        .status-concluido {
+            background: #2196F3;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 20px;
+            display: inline-block;
+            font-size: 12px;
+        }
+        .btn-cancelar {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-size: 12px;
+        }
+        .btn-cancelar:hover {
+            background: #d32f2f;
+        }
+        .sem-agendamentos {
+            text-align: center;
+            padding: 30px;
+            color: #888;
+            font-style: italic;
+        }
+        .btn-gerenciar {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-right: 10px;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+        }
+        .btn-gerenciar:hover {
+            background: #0b7dda;
+        }
+
+        /* ESTILOS CENTRALIZADOS E MAIOR */
+        .welcome-area {
+            text-align: center;
+            padding: 50px 20px;
+        }
+        .welcome-text h1 {
+            font-size: 42px;
+            margin-bottom: 20px;
+            color: #3e2c2c;
+        }
+        .user-name {
+            font-size: 46px;
+            display: inline-block;
+            background: linear-gradient(135deg, #b76e79, #e0a4a8);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .welcome-phrase {
+            font-size: 20px;
+            color: #b76e79;
+            margin: 20px auto 25px;
+            font-style: italic;
+            background: rgba(183, 110, 121, 0.08);
+            display: inline-block;
+            padding: 12px 30px;
+            border-radius: 50px;
+        }
+        .stats-cards {
+            display: flex;
+            gap: 25px;
+            justify-content: center;
+            margin: 35px 0;
+            flex-wrap: wrap;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #fff0f5, #ffe4e8);
+            padding: 22px 35px;
+            border-radius: 20px;
+            text-align: center;
+            min-width: 150px;
+            border: 1px solid #b76e79;
+        }
+        .stat-card .numero {
+            font-size: 36px;
+            font-weight: bold;
+            color: #b76e79;
+        }
+        .stat-card .label {
+            font-size: 14px;
+            color: #3e2c2c;
+        }
+        .dica-dia {
+            background: #fff8e1;
+            border-left: 4px solid #b76e79;
+            padding: 15px 25px;
+            border-radius: 16px;
+            margin: 25px 0;
+            font-size: 16px;
+            text-align: center;
+        }
+        .social-share {
+            margin-top: 25px;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+        .social-btn {
+            background: #3e2c2c;
+            border: none;
+            padding: 10px 22px;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: 0.2s;
+            color: white;
+            font-size: 14px;
+        }
+        .social-btn:hover {
+            background: #b76e79;
+            transform: scale(1.05);
+        }
+        .loginButtonAreaCentral {
+            margin-top: 25px;
+        }
+        .loginButtonAreaCentral .btn-login-main {
+            font-size: 18px;
+            padding: 12px 35px;
+        }
+    </style>
+</head>
+<body>
+<header class="main-header">
+    <div class="header-content">
+        <div class="logo-container">
+            <img src="img/logo.png" alt="Andressa Mariano" class="logo-img" />
+        </div>
+        <nav class="header-nav">
+            <div class="user-actions" id="userActions"></div>
+        </nav>
+    </div>
+</header>
+
+<main class="dashboard-container">
+    <section class="welcome-area">
+        <div class="welcome-text">
+            <h1>Olá, <span id="userNameSpan" class="user-name">Visitante</span>!</h1>
+            <div id="fraseMotivacional" class="welcome-phrase">
+                Seu cabelo merece um momento especial hoje
+            </div>
+            <div id="loginButtonArea" class="loginButtonAreaCentral"></div>
+        </div>
+    </section>
+
+    <!-- Cards de Estatísticas (visíveis apenas quando logado) -->
+    <div id="statsContainer" style="display: none;">
+        <div class="stats-cards">
+            <div class="stat-card">
+                <div class="numero" id="totalAgendamentosCliente">0</div>
+                <div class="label">Agendamentos</div>
+            </div>
+            <div class="stat-card">
+                <div class="numero" id="totalGastoCliente">0</div>
+                <div class="label">Total Gasto</div>
+            </div>
+            <div class="stat-card">
+                <div class="numero" id="visitasCliente">0</div>
+                <div class="label">Visitas</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dica do dia -->
+    <div class="dica-dia" id="dicaContainer" style="display: none;">
+        <strong>Dica do dia:</strong>
+        <span id="dicaCabelo">Hidrate seus cabelos uma vez por semana com produtos naturais!</span>
+    </div>
+
+    <div class="divider"></div>
+
+    <section class="main-grid-section">
+        <h3 class="section-label">Conheca nossos servicos</h3>
+        <div class="grid-layout" id="servicosGrid">
+            <p>Carregando servicos...</p>
+        </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- SEÇÃO: MEUS AGENDAMENTOS -->
+    <section class="main-grid-section" id="meusAgendamentosSection" style="display: none;">
+        <h3 class="section-label">Meus Agendamentos</h3>
+        <div id="meusAgendamentosLista">
+            <p>Carregando seus agendamentos...</p>
+        </div>
+    </section>
+
+    <div class="divider" id="dividerAgendamentos" style="display: none;"></div>
+
+    <section class="contact-section">
+        <h3 class="section-label">Onde nos encontrar</h3>
+        <div class="contact-container">
+            <div class="contact-item"><h4>Endereco</h4><p>Rua Indonesia, 89 - Vilarejo</p></div>
+            <div class="contact-item"><h4>Telefone</h4><p>(11) 95638-2834</p></div>
+            <div class="contact-item"><h4>Instagram</h4><p>@studioandressamariano</p></div>
+        </div>
+        <div class="social-share">
+            <button class="social-btn" onclick="window.open('https://wa.me/5511956382834', '_blank')">WhatsApp</button>
+            <button class="social-btn" onclick="window.open('https://instagram.com/studioandressamariano', '_blank')">Instagram</button>
+        </div>
+    </section>
+</main>
+
+<footer class="main-footer"><p>2026 Studio Andressa Mariano Hair</p></footer>
+
+<!-- Modal de agendamento -->
+<div id="modal-agendamento" class="modal-overlay">
+    <div class="modal-content">
+        <h2>Agendamento</h2>
+        <p class="login-subtitle">Confira os detalhes</p>
+        <p><strong>Servico:</strong> <span id="servico-nome"></span></p>
+        <p><strong>Preco:</strong> <span id="servico-preco"></span></p>
+        <div class="input-group">
+            <label>Data (DD/MM/AAAA):</label>
+            <input type="text" id="modalData" placeholder="Ex: 25/12/2026" />
+        </div>
+        <div class="input-group">
+            <label>Hora (HH:MM):</label>
+            <input type="text" id="modalHora" placeholder="Ex: 14:30" />
+        </div>
+        <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
+            <button class="btn-login" id="confirmarBtn" style="margin: 0;">Confirmar</button>
+            <button class="btn-fechar" id="fecharModalBtn">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    console.log("Pagina carregada");
+    
+    let usuarioAtual = null;
+    let servicoSelecionado = null;
+
+    // Frases motivacionais
+    const frases = [
+        "Seu cabelo merece um momento especial hoje",
+        "Pronta para se sentir ainda mais linda?",
+        "Agende seu horario e venha se cuidar!",
+        "Clientes satisfeitas e o que nos move!",
+        "Cuidar de voce e o nosso prazer!",
+        "Sua autoestima agradece um momento de cuidado",
+        "Transforme seu visual, transforme seu dia!"
+    ];
+
+    // Dicas de cabelo
+    const dicas = [
+        "Hidrate seus cabelos uma vez por semana com produtos naturais!",
+        "Aparar as pontas a cada 3 meses ajuda no crescimento saudavel.",
+        "Use protetor termico antes de usar secador ou chapinha.",
+        "Mascara de abacate e otima para cabelos ressecados.",
+        "Evite prender o cabelo molhado para nao quebrar os fios.",
+        "Oleo de coco e um excelente hidratante natural!"
+    ];
+
+    function mostrarFraseAleatoria() {
+        const fraseElement = document.getElementById("fraseMotivacional");
+        if (fraseElement) {
+            const fraseAleatoria = frases[Math.floor(Math.random() * frases.length)];
+            fraseElement.innerText = fraseAleatoria;
+        }
+    }
+
+    function mostrarDicaAleatoria() {
+        const dicaElement = document.getElementById("dicaCabelo");
+        if (dicaElement) {
+            const dicaAleatoria = dicas[Math.floor(Math.random() * dicas.length)];
+            dicaElement.innerText = dicaAleatoria;
+        }
+    }
+
+    setInterval(mostrarFraseAleatoria, 30000);
+    setInterval(mostrarDicaAleatoria, 45000);
+
+    async function carregarServicos() {
+        console.log("Carregando servicos...");
+        try {
+            const servicos = await listarServicos();
+            const grid = document.getElementById("servicosGrid");
+            grid.innerHTML = "";
+            if (!servicos || servicos.length === 0) {
+                grid.innerHTML = "<p>Nenhum servico disponivel.</p>";
+                return;
+            }
+            servicos.forEach(servico => {
+                const card = document.createElement("div");
+                card.className = "servico-card";
+                const imgNum = (servico.id % 10) + 1;
+                const imgSrc = `img/${imgNum.toString().padStart(2, '0')}.jpg`;
+                card.innerHTML = `
+                    <div class="card-thumb"><img src="${imgSrc}" alt="${servico.nome}" onerror="this.src='img/placeholder.jpg'" /></div>
+                    <div class="card-info">
+                        <h4>${servico.nome}</h4>
+                        <p>R$ ${parseFloat(servico.preco).toFixed(2)}</p>
+                        <button class="btn-action-full" data-id="${servico.id}" data-nome="${servico.nome}" data-preco="${servico.preco}">Reservar</button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+            
+            document.querySelectorAll(".btn-action-full").forEach(btn => {
+                btn.addEventListener("click", function(e) {
+                    e.preventDefault();
+                    const id = parseInt(this.dataset.id);
+                    const nome = this.dataset.nome;
+                    const preco = parseFloat(this.dataset.preco);
+                    abrirModal(id, nome, preco);
+                });
+            });
+        } catch (err) {
+            console.error("Erro:", err);
+            document.getElementById("servicosGrid").innerHTML = "<p>Erro ao carregar servicos. Back-end esta rodando?</p>";
+        }
+    }
+
+    async function carregarMeusAgendamentos() {
+        if (!usuarioAtual) return;
+        
+        const section = document.getElementById("meusAgendamentosSection");
+        const container = document.getElementById("meusAgendamentosLista");
+        const divider = document.getElementById("dividerAgendamentos");
+        
+        try {
+            const agendamentos = await listarMeusAgendamentos(usuarioAtual.email);
+            
+            if (!agendamentos || agendamentos.length === 0) {
+                section.style.display = "none";
+                divider.style.display = "none";
+                return;
+            }
+            
+            section.style.display = "block";
+            divider.style.display = "block";
+            
+            const totalAgendamentos = agendamentos.length;
+            const totalGasto = agendamentos.reduce((sum, a) => sum + (a.valor_total || 0), 0);
+            const concluidos = agendamentos.filter(a => a.status === 'concluido').length;
+            
+            document.getElementById("totalAgendamentosCliente").innerText = totalAgendamentos;
+            document.getElementById("totalGastoCliente").innerText = `R$ ${totalGasto.toFixed(2)}`;
+            document.getElementById("visitasCliente").innerText = concluidos;
+            document.getElementById("statsContainer").style.display = "block";
+            document.getElementById("dicaContainer").style.display = "flex";
+            
+            container.innerHTML = agendamentos.map(a => {
+                let statusClass = "status-agendado";
+                let statusText = "Agendado";
+                let botoes = "";
+                
+                if (a.status === 'agendado') {
+                    statusClass = "status-agendado";
+                    statusText = "Agendado";
+                    botoes = `<button class="btn-cancelar" data-id="${a.id}" data-status="${a.status}">Cancelar</button>`;
+                } else if (a.status === 'cancelado') {
+                    statusClass = "status-cancelado";
+                    statusText = "Cancelado";
+                } else if (a.status === 'concluido') {
+                    statusClass = "status-concluido";
+                    statusText = "Concluido";
+                }
+                
+                return `
+                    <div class="agendamento-card" data-id="${a.id}">
+                        <h4>${a.data_agendamento} as ${a.hora_agendamento}</h4>
+                        <p><strong>Servicos:</strong> ${a.servicos || 'Nenhum'}</p>
+                        <p><strong>Valor total:</strong> R$ ${(a.valor_total || 0).toFixed(2)}</p>
+                        <p><strong>Status:</strong> <span class="${statusClass}">${statusText}</span></p>
+                        ${botoes}
+                    </div>
+                `;
+            }).join('');
+            
+            document.querySelectorAll(".btn-cancelar").forEach(btn => {
+                btn.addEventListener("click", async (e) => {
+                    e.stopPropagation();
+                    const agendamentoId = parseInt(btn.dataset.id);
+                    const status = btn.dataset.status;
+                    
+                    if (status !== 'agendado') {
+                        alert("Este agendamento nao pode ser cancelado.");
+                        return;
+                    }
+                    
+                    const confirmar = confirm("Tem certeza que deseja cancelar este agendamento?");
+                    if (!confirmar) return;
+                    
+                    try {
+                        await cancelarAgendamento(agendamentoId, usuarioAtual.email, usuarioAtual.senha);
+                        alert("Agendamento cancelado com sucesso!");
+                        await carregarMeusAgendamentos();
+                    } catch (err) {
+                        alert("Erro ao cancelar: " + (err.detail || err.message));
+                    }
+                });
+            });
+            
+        } catch (err) {
+            console.error("Erro ao carregar agendamentos:", err);
+            container.innerHTML = "<p class='sem-agendamentos'>Erro ao carregar agendamentos.</p>";
+        }
+    }
+
+    function atualizarUI() {
+        const usuarioStr = localStorage.getItem("usuario");
+        if (usuarioStr) {
+            usuarioAtual = JSON.parse(usuarioStr);
+            document.getElementById("userNameSpan").innerText = usuarioAtual.nome;
+            
+            if (usuarioAtual.tipo === 'funcionario' || usuarioAtual.tipo === 'admin') {
+                document.getElementById("loginButtonArea").innerHTML = `
+                    <a href="gerenciar.html" class="btn-gerenciar">Gerenciar Sistema</a>
+                    <button class="btn-login-main" id="logoutBtn">Sair</button>
+                `;
+            } else {
+                document.getElementById("loginButtonArea").innerHTML = `<button class="btn-login-main" id="logoutBtn">Sair</button>`;
+            }
+            
+            const logoutBtn = document.getElementById("logoutBtn");
+            if (logoutBtn) {
+                logoutBtn.addEventListener("click", () => {
+                    localStorage.removeItem("usuario");
+                    window.location.reload();
+                });
+            }
+            carregarMeusAgendamentos();
+            mostrarFraseAleatoria();
+            mostrarDicaAleatoria();
+        } else {
+            document.getElementById("userNameSpan").innerText = "Visitante";
+            document.getElementById("loginButtonArea").innerHTML = `<a href="login.html" class="btn-login-main">Login</a>`;
+            document.getElementById("meusAgendamentosSection").style.display = "none";
+            document.getElementById("dividerAgendamentos").style.display = "none";
+            document.getElementById("statsContainer").style.display = "none";
+            document.getElementById("dicaContainer").style.display = "none";
+            mostrarFraseAleatoria();
+        }
+    }
+
+    function abrirModal(servicoId, nome, preco) {
+        if (!usuarioAtual) {
+            alert("Voce precisa estar logado para agendar.");
+            window.location.href = "login.html";
+            return;
+        }
+        servicoSelecionado = { id: servicoId, nome, preco };
+        document.getElementById("servico-nome").innerText = nome;
+        document.getElementById("servico-preco").innerText = `R$ ${preco.toFixed(2)}`;
+        document.getElementById("modal-agendamento").style.display = "flex";
+    }
+
+    function fecharModal() {
+        document.getElementById("modal-agendamento").style.display = "none";
+        document.getElementById("modalData").value = "";
+        document.getElementById("modalHora").value = "";
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        atualizarUI();
+        carregarServicos();
+        
+        const confirmarBtn = document.getElementById("confirmarBtn");
+        const fecharBtn = document.getElementById("fecharModalBtn");
+        
+        if (confirmarBtn) {
+            confirmarBtn.addEventListener("click", async () => {
+                const data = document.getElementById("modalData").value;
+                const hora = document.getElementById("modalHora").value;
+                if (!data || !hora) {
+                    alert("Preencha data e hora!");
+                    return;
+                }
+                if (!servicoSelecionado) {
+                    alert("Nenhum servico selecionado!");
+                    return;
+                }
+                try {
+                    await criarAgendamento(usuarioAtual.email, data, hora, [servicoSelecionado.id]);
+                    alert("Agendamento realizado com sucesso!");
+                    fecharModal();
+                    await carregarMeusAgendamentos();
+                } catch (err) {
+                    alert("Erro: " + (err.detail || err.message));
+                }
+            });
+        }
+        
+        if (fecharBtn) {
+            fecharBtn.addEventListener("click", fecharModal);
+        }
+        
+        document.getElementById("modal-agendamento")?.addEventListener("click", function(e) {
+            if (e.target === this) fecharModal();
+        });
+    });
+</script>
+</body>
+</html>

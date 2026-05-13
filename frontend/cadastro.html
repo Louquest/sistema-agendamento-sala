@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <title>Cadastro</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="api/api.js"></script>
+</head>
+<body>
+<div class="login-container">
+    <div class="login-box">
+        <h2>Crie sua conta</h2>
+        <p class="login-subtitle">Preencha os dados para se cadastrar</p>
+        <form id="cadastroForm">
+            <div class="input-group">
+                <label>Nome completo</label>
+                <input type="text" id="cadNome" required />
+            </div>
+            <div class="input-group">
+                <label>Email</label>
+                <input type="email" id="cadEmail" required />
+            </div>
+            <div class="input-group">
+                <label>Senha (mínimo 6 caracteres)</label>
+                <input type="password" id="cadSenha" required />
+            </div>
+            <div class="input-group">
+                <label>Telefone (10 ou 11 dígitos)</label>
+                <input type="text" id="cadTelefone" required />
+            </div>
+            <button type="submit" class="btn-login">Cadastrar</button>
+        </form>
+        <div class="login-footer">
+            Já tem conta? <a href="login.html">Entrar</a>
+        </div>
+        <a href="index.html" class="link-voltar">← Voltar para o início</a>
+    </div>
+</div>
+<script>
+    document.getElementById("cadastroForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const nome = document.getElementById("cadNome").value;
+        const email = document.getElementById("cadEmail").value;
+        const senha = document.getElementById("cadSenha").value;
+        const telefone = document.getElementById("cadTelefone").value;
+        try {
+            await cadastrarUsuario(nome, email, senha, telefone);
+            alert("Cadastro realizado! Faça login.");
+            window.location.href = "login.html";
+        } catch (err) {
+            alert("Erro: " + err.detail);
+        }
+    });
+</script>
+</body>
+</html>
